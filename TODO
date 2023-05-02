@@ -1,0 +1,6 @@
+. establish global safety params: k, α, m
+. liveness violations arise from unvirtuous clients
+. safety: eventual consensus?
+. Snowflake: BFT
+. Snowball: Adding Confidence
+. Avalanche: Adding a DAG

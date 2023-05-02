@@ -1,0 +1,9 @@
+<Project>
+<ProjectName>Pinwheel</ProjectName>
+<InputFiles>
+	<PFile>./algo/</PFile>
+	<PFile>./spec/</PFile>
+	<PFile>./test/</PFile>
+</InputFiles>
+<OutputDir>./build/</OutputDir>
+</Project>

@@ -1,0 +1,15 @@
+=====
+pinwheel
+
+The [paper] "Scalable and Probabilistic Leaderless BFT Consensus through
+Metastability" introduces some consensus mechanisms. We implement them in P.
+
+== what do I do? ==
+
+1. Install P.
+2. Run this:
+
+% p compile && p check
+
+
+[paper]: https://arxiv.org/pdf/1906.08936.pdf
