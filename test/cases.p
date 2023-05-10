@@ -3,5 +3,5 @@ test SingleClient [main=TestWithSingleClient]:
         in (union Client, Slusher, { TestWithSingleClient });
 
 test MultiClient [main=TestWithVirtuousClients]:
-        assert AtLeastOneAccept
+        assert AtLeastOneAccept, Consensus
         in (union Client, Slusher, { TestWithVirtuousClients });
