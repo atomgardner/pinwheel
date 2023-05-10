@@ -1,4 +1,4 @@
-enum Colour { Red, Green, None }
+enum Colour { None, Red, Green }
 
 event Setup: Config;
 
@@ -13,15 +13,33 @@ type QueryRequest = (source: machine, colour: Colour);
 type QueryResponse = (source: machine, colour: Colour);
 type Config = (id: int, peers: set[Slusher]);
 
-machine Slusher {
-	var id: int;
-	var colour: Colour;
-	var peers: set[Slusher];
-	var k: int; // safety
-	var m: int; // number of rounds
+fun resetCounts(): map[Colour, int] {
+	var c: map[Colour, int];
+	c[None] = 0;
+	c[Red] = 0;
+	c[Green] = 0;
+	return c;
+}
 
+machine Slusher {
+	// node id
+	var id: int;
+	// this nodes colour
+	var colour: Colour;
+	// network/swarm
+	var peers: set[Slusher];
+	// sample size
+	var k: int;
+	// number of rounds
+	var m: int;
+	// client that initiated the transaction
+	var txSrc: machine;
+	// the query round counter
 	var round: int;
+	// counts for query responses
 	var counts: map[Colour, int];
+	// number of responses collected
+	var responses: int;
 
 	start state Init {
 		defer Transaction, Query;
@@ -31,8 +49,11 @@ machine Slusher {
 				case Setup: (c: Config) {
 					id = c.id;
 					peers = c.peers;
+					colour = None;
+
 					k = sizeof(peers)/2 + 1;
 					m = 10;
+					counts = resetCounts();
 				}
 			}
 
@@ -42,10 +63,11 @@ machine Slusher {
 
 	state Listen {
 		on Transaction do (r: TxRequest) {
+			txSrc = r.source;
 			// Upon receiving a transaction from a client, an uncolored node
 			// updates its own color to the one carried in the transaction
 			// and initiates a query
-			if (colour to int == None to int ) {
+			if (colour == None) {
 				colour = r.colour;
 				goto InitiateQuery;
 			}
@@ -72,8 +94,17 @@ machine Slusher {
 		entry {
 			var slusher: Slusher;
 			var sample: set[Slusher];
+
+			round = round + 1;
+			counts = resetCounts();
+			responses = 0;
+
 			while (sizeof(sample) < k) {
-				sample += (choose(peers));
+				slusher = (choose(peers));
+				if (slusher == this) {
+					continue;
+				}
+				sample += (slusher);
 			}
 
 			foreach (slusher in sample) {
@@ -87,31 +118,31 @@ machine Slusher {
 	state Querying {
 		defer Transaction;
 
-		entry {
-			if (round == m) {
-				goto Accepted;
-			}
-		}
-
 		on Response do (r: QueryResponse) {
+			responses = responses + 1;
 			counts[r.colour] = counts[r.colour] + 1;
 
 			// message delivery is guaranteed
-			if (sizeof(counts) == k) {
+			if (responses == k) {
 				if (counts[Green] > k/2) {
+                                        print format("{0} changed colour to Green", this);
 					colour = Green;
 				}
 				if (counts[Red] > k/2) {
+                                        print format("{0} changed colour to Red", this);
 					colour = Red;
 				}
 
-				round = round + 1;
-				counts = default(map[Colour, int]);
-
-				goto Querying;
+				if (round < m) {
+					goto InitiateQuery;
+				} else {
+					if (txSrc != null) {
+						send txSrc, Accept, (source = this, colour = colour);
+					}
+					goto Accepted;
+				}
 			}
 		}
-
 		on Query do (r: QueryRequest) {
 			send r.source, Response, (source = this, colour = colour);
 		}
@@ -119,7 +150,7 @@ machine Slusher {
 
 	state Accepted {
 		on Transaction do (r: TxRequest) {
-			send r.source, Response, (source = this, colour = colour);
+			send r.source, Accept, (source = this, colour = colour);
 		}
 		on Query do (r: QueryRequest) {
 			send r.source, Response, (source = this, colour = colour);
