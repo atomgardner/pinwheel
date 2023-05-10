@@ -7,8 +7,8 @@ spec AtLeastOneAccept observes Accept {
 		}
 	}
 	state Accepted {
-                on Accept do {
-                        goto Accepted;
-                }
-        }
+		on Accept do {
+			goto Accepted;
+		}
+	}
 }
