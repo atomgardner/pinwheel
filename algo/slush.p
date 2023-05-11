@@ -1,33 +1,12 @@
 enum Colour { None, Red, Green }
 
-event Setup: Config;
-
-event Transaction: TxRequest;
-event Accept: TxResponse;
-event Query: QueryRequest;
-event Response: QueryResponse;
-
-type TxRequest = (source: machine, colour: Colour);
-type TxResponse = (source: machine, colour: Colour);
-type QueryRequest = (source: machine, colour: Colour);
-type QueryResponse = (source: machine, colour: Colour);
-type Config = (id: int, peers: set[Slusher]);
-
-fun resetCounts(): map[Colour, int] {
-	var c: map[Colour, int];
-	c[None] = 0;
-	c[Red] = 0;
-	c[Green] = 0;
-	return c;
-}
-
 machine Slusher {
 	// node id
 	var id: int;
 	// this nodes colour
 	var colour: Colour;
 	// network/swarm
-	var peers: set[Slusher];
+	var peers: set[machine];
 	// sample size
 	var k: int;
 	// number of rounds
@@ -53,7 +32,8 @@ machine Slusher {
 
 					k = sizeof(peers)/2 + 1;
 					m = 10;
-					counts = resetCounts();
+					counts = newCounter();
+					send c.source, Ready;
 				}
 			}
 
@@ -92,11 +72,11 @@ machine Slusher {
 		defer Transaction;
 
 		entry {
-			var slusher: Slusher;
-			var sample: set[Slusher];
+			var slusher: machine;
+			var sample: set[machine];
 
 			round = round + 1;
-			counts = resetCounts();
+			counts = newCounter();
 			responses = 0;
 
 			while (sizeof(sample) < k) {
@@ -136,9 +116,6 @@ machine Slusher {
 				if (round < m) {
 					goto InitiateQuery;
 				} else {
-					if (txSrc != null) {
-						send txSrc, Accept, (source = this, colour = colour);
-					}
 					goto Accepted;
 				}
 			}
@@ -149,6 +126,11 @@ machine Slusher {
 	}
 
 	state Accepted {
+		entry {
+			if (txSrc != null) {
+				send txSrc, Accept, (source = this, colour = colour);
+			}
+		}
 		on Transaction do (r: TxRequest) {
 			send r.source, Accept, (source = this, colour = colour);
 		}
@@ -156,4 +138,12 @@ machine Slusher {
 			send r.source, Response, (source = this, colour = colour);
 		}
 	}
+}
+
+fun newCounter(): map[Colour, int] {
+	var c: map[Colour, int];
+	c[None] = 0;
+	c[Red] = 0;
+	c[Green] = 0;
+	return c;
 }

@@ -1,5 +1,5 @@
 machine Client {
-	var peers: set[Slusher];
+	var peers: set[machine];
 
 	start state Init {
 		entry {

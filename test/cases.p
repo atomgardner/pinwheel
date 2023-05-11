@@ -1,7 +1,7 @@
-test SingleClient [main=TestWithSingleClient]:
+test SlushSingleClient [main=TestWithSingleClient]:
         assert AtLeastOneAccept
-        in (union Client, Slusher, { TestWithSingleClient });
+        in (union Client, { Slusher -> Node }, { TestWithSingleClient });
 
-test MultiClient [main=TestWithVirtuousClients]:
+test SlushMultiClient [main=TestWithVirtuousClients]:
         assert AtLeastOneAccept, Consensus
-        in (union Client, Slusher, { TestWithVirtuousClients });
+        in (union Client, { Slusher -> Node }, { TestWithVirtuousClients });

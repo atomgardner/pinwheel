@@ -2,7 +2,7 @@
 machine TestWithSingleClient {
 	start state Init {
 		entry {
-			setupClients(1, setupNodes(5));
+			setupClients(this, 1, setupNodes(this, 5));
 		}
 	}
 }
