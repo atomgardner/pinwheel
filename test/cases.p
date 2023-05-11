@@ -5,3 +5,11 @@ test SlushSingleClient [main=TestWithSingleClient]:
 test SlushMultiClient [main=TestWithVirtuousClients]:
         assert AtLeastOneAccept, Consensus
         in (union Client, { Slusher -> Node }, { TestWithVirtuousClients });
+
+test SnowflakeSingleClient [main=TestWithSingleClient]:
+        assert AtLeastOneAccept
+        in (union Client, { Snowflaker -> Node }, { TestWithSingleClient });
+
+test SnowflakeMultiClient [main=TestWithVirtuousClients]:
+        assert AtLeastOneAccept, Consensus
+        in (union Client, { Snowflaker -> Node }, { TestWithVirtuousClients });
