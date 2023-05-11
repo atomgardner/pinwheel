@@ -105,11 +105,11 @@ machine Slusher {
 			// message delivery is guaranteed
 			if (responses == k) {
 				if (counts[Green] > k/2) {
-                                        print format("{0} changed colour to Green", this);
+					print format("{0} changed colour to Green", this);
 					colour = Green;
 				}
 				if (counts[Red] > k/2) {
-                                        print format("{0} changed colour to Red", this);
+					print format("{0} changed colour to Red", this);
 					colour = Red;
 				}
 
