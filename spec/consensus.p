@@ -27,7 +27,7 @@ spec Consensus observes Accept, Transaction {
 				c = r.colour;
 			}
 			assert r.colour == c,
-			       "slushers accepted different colours";
+			       "machines accepted different colours";
 			pending = pending - 1;
 			if (pending == 0) {
 				goto Balanced;
